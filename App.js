@@ -1,6 +1,9 @@
 import { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import './App.css';
 import EmployeeForm from './EmployeeForm';
+import EmployeeList from './EmployeeList';
+import EmployeeDetail from './EmployeeDetail';
 
 function App() {
   // Initialize state from localStorage if data already exists,
@@ -11,8 +14,13 @@ function App() {
   });
 
   // Adds a new employee object to the employees state array.
+  // A unique EmployeeId is generated using the current timestamp.
   function addEmployee(newEmployee) {
-    setEmployees((prev) => [...prev, newEmployee]);
+    const employeeWithId = {
+      ...newEmployee,
+      EmployeeId: Date.now().toString(),
+    };
+    setEmployees((prev) => [...prev, employeeWithId]);
   }
 
   // Saves the current employees array to localStorage.
@@ -23,25 +31,44 @@ function App() {
   }
 
   return (
-    <div className="App">
-      <h1>Employee Form</h1>
-      <EmployeeForm addEmployee={addEmployee} saveData={saveData} />
+    <Router>
+      {/* Navigation Bar */}
+      <nav style={styles.nav}>
+        <Link style={styles.link} to="/">Add Employee</Link>
+        <Link style={styles.link} to="/employees">Employee List</Link>
+      </nav>
 
-      {/* Display the list of added employees */}
-      {employees.length > 0 && (
-        <div>
-          <h2>Employee List</h2>
-          <ul>
-            {employees.map((emp, index) => (
-              <li key={index}>
-                <strong>{emp.name}</strong> — {emp.title} | {emp.department} | {emp.email}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
+      {/* Page Routes */}
+      <Routes>
+        <Route
+          path="/"
+          element={<EmployeeForm addEmployee={addEmployee} saveData={saveData} />}
+        />
+        <Route
+          path="/employees"
+          element={<EmployeeList employees={employees} />}
+        />
+        <Route
+          path="/employees/:id"
+          element={<EmployeeDetail />}
+        />
+      </Routes>
+    </Router>
   );
 }
+
+const styles = {
+  nav: {
+    display: 'flex',
+    gap: '20px',
+    padding: '16px 24px',
+    backgroundColor: '#282c34',
+  },
+  link: {
+    color: '#61dafb',
+    textDecoration: 'none',
+    fontSize: '16px',
+  },
+};
 
 export default App;
