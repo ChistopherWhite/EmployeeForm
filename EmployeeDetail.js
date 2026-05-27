@@ -1,50 +1,66 @@
-import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import './EmployeeList.css';
 
-function EmployeeDetail() {
-  const { id } = useParams();
-
-  // Load employees from localStorage and find the matching employee by ID
-  const employees = JSON.parse(localStorage.getItem('employees')) || [];
-  const employee = employees.find((emp) => emp.EmployeeId === id);
-
-  if (!employee) {
-    return (
-      <div className="employee-detail">
-        <h1>Employee Not Found</h1>
-        <p>This employee does not exist or may not have been saved yet.</p>
-        <Link to="/employees" className="back-link">← Back to Employee List</Link>
-      </div>
-    );
+const DEPT_COLORS = ['#f5a623','#42c789','#4299e1','#9f7aea','#f687b3','#f56342','#38b2ac','#ed8936'];
+const deptColorMap = {};
+let colorIndex = 0;
+function getDeptColor(dept) {
+  const key = dept?.toLowerCase().trim() || 'other';
+  if (!deptColorMap[key]) {
+    deptColorMap[key] = DEPT_COLORS[colorIndex % DEPT_COLORS.length];
+    colorIndex++;
   }
+  return deptColorMap[key];
+}
+
+function initials(name) {
+  return (name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+}
+
+function EmployeeDetail({ employees }) {
+  const { id } = useParams();
+  const employee = (employees.length > 0 ? employees : JSON.parse(localStorage.getItem('employees') || '[]'))
+    .find(emp => emp.EmployeeId === id);
+
+  if (!employee) return (
+    <div className="detail-page">
+      <h1>Not Found</h1>
+      <p style={{ color: 'var(--muted)', marginBottom: 20 }}>This employee record doesn't exist.</p>
+      <Link to="/employees" className="back-link">← Back to list</Link>
+    </div>
+  );
+
+  const color = getDeptColor(employee.department);
 
   return (
-    <div className="employee-detail">
-      <h1>Employee Details</h1>
-      <div className="detail-card">
-        <div className="detail-row">
-          <span className="detail-label">Name</span>
-          <span className="detail-value">{employee.name}</span>
-        </div>
-        <div className="detail-row">
-          <span className="detail-label">Email</span>
-          <span className="detail-value">{employee.email}</span>
-        </div>
-        <div className="detail-row">
-          <span className="detail-label">Job Title</span>
-          <span className="detail-value">{employee.title}</span>
-        </div>
-        <div className="detail-row">
-          <span className="detail-label">Department</span>
-          <span className="detail-value">{employee.department}</span>
-        </div>
-        <div className="detail-row">
-          <span className="detail-label">Employee ID</span>
-          <span className="detail-value">{employee.EmployeeId}</span>
+    <div className="detail-page">
+      <Link to="/employees" className="back-link" style={{ marginBottom: 20, display: 'inline-flex' }}>
+        ← Back to list
+      </Link>
+
+      <h1 style={{ marginTop: 16 }}>Employee Profile</h1>
+
+      <div className="detail-hero" style={{ '--dept-color': color }}>
+        <div className="detail-avatar">{initials(employee.name)}</div>
+        <div>
+          <div className="detail-hero-name">{employee.name}</div>
+          <div className="detail-hero-title">{employee.title}</div>
         </div>
       </div>
-      <Link to="/employees" className="back-link">← Back to Employee List</Link>
+
+      <div className="detail-fields">
+        {[
+          ['Email',       employee.email],
+          ['Department',  employee.department],
+          ['Job Title',   employee.title],
+          ['Employee ID', employee.EmployeeId],
+        ].map(([label, value]) => (
+          <div className="detail-field" key={label}>
+            <span className="detail-field-label">{label}</span>
+            <span className="detail-field-value">{value}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
